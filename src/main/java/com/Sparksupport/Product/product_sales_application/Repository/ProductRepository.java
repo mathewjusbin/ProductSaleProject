@@ -1,12 +1,12 @@
-package com.Sparksupport.Product.product_sales_application.Repository;
+package com.sparksupport.product.product_sales_application.repository;
 
-import com.Sparksupport.Product.product_sales_application.Dto.Product;
+import com.sparksupport.product.product_sales_application.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
 
-    boolean existsByName(String name);
+    boolean existsByNameAndIsDeletedFalse(String name);
 
 }

@@ -1,20 +1,18 @@
-package com.Sparksupport.Product.product_sales_application.ServiceImpl;
+package com.sparksupport.product.product_sales_application.serviceImpl;
 
-import com.Sparksupport.Product.product_sales_application.Dto.Product;
-import com.Sparksupport.Product.product_sales_application.Dto.Sale;
-import com.Sparksupport.Product.product_sales_application.Exception.ProductNotFoundException;
-import com.Sparksupport.Product.product_sales_application.Repository.ProductRepository;
-import com.Sparksupport.Product.product_sales_application.Repository.SaleRepository;
-import com.Sparksupport.Product.product_sales_application.Service.ProductService;
+import com.sparksupport.product.product_sales_application.exception.ProductNotFoundException;
+import com.sparksupport.product.product_sales_application.model.Product;
+import com.sparksupport.product.product_sales_application.repository.ProductRepository;
+import com.sparksupport.product.product_sales_application.repository.SaleRepository;
+import com.sparksupport.product.product_sales_application.service.ProductService;
+import com.sparksupport.product.product_sales_application.dto.ProductDto;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -41,14 +39,19 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product addProduct(Product product) {
-        //Validation
-        if (productRepository.existsByName(product.getName())) {
+    public Product addProduct(ProductDto product) {
+         Product productEntity = Product.builder()
+                .description(product.getDescription())
+                .name(product.getName())
+                .price(product.getPrice())
+                .isDeleted(false)
+                .build();
+
+        if (productRepository.existsByNameAndIsDeletedFalse(productEntity.getName())) {
             throw new IllegalArgumentException("Product with name '" + product.getName() + "' already exists.");
         }
-        return productRepository.save(product);
+        return productRepository.save(productEntity);
     }
-
     @Override
     public Product updateProduct(Integer id, Product product) {
         Product existingProduct = productRepository.findById(id)

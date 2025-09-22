@@ -1,7 +1,7 @@
-package com.Sparksupport.Product.product_sales_application.Repository;
+package com.sparksupport.product.product_sales_application.repository;
 
 
-import com.Sparksupport.Product.product_sales_application.Dto.Sale;
+import com.sparksupport.product.product_sales_application.model.Sale;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

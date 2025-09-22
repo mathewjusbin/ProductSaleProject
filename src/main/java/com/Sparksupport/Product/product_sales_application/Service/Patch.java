@@ -1,4 +1,4 @@
-package com.Sparksupport.Product.product_sales_application.Service;
+package com.sparksupport.product.product_sales_application.service;
 
 public interface Patch {
 }

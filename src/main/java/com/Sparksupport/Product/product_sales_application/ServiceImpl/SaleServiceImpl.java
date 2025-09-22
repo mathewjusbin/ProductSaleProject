@@ -1,13 +1,12 @@
-package com.Sparksupport.Product.product_sales_application.ServiceImpl;
+package com.sparksupport.product.product_sales_application.serviceImpl;
 
-import com.Sparksupport.Product.product_sales_application.Dto.Product;
-import com.Sparksupport.Product.product_sales_application.Dto.Sale;
-import com.Sparksupport.Product.product_sales_application.Exception.ProductNotFoundException;
-import com.Sparksupport.Product.product_sales_application.Repository.ProductRepository;
-import com.Sparksupport.Product.product_sales_application.Repository.SaleRepository;
-import com.Sparksupport.Product.product_sales_application.Service.SaleService;
+import com.sparksupport.product.product_sales_application.exception.ProductNotFoundException;
+import com.sparksupport.product.product_sales_application.model.Product;
+import com.sparksupport.product.product_sales_application.model.Sale;
+import com.sparksupport.product.product_sales_application.repository.ProductRepository;
+import com.sparksupport.product.product_sales_application.repository.SaleRepository;
+import com.sparksupport.product.product_sales_application.service.SaleService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,10 +21,9 @@ public class SaleServiceImpl implements SaleService {
         this.saleRepository = saleRepository;
     }
     @Override
-    public Sale addSales(Integer productId, Sale sale) {
+    public Sale addSales(Integer productId, Sale sale) { // check this one
         Product existingProduct = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
-        sale.setProductId(productId);
         return saleRepository.save(sale);
     }
 

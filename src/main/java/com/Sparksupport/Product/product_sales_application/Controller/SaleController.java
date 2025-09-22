@@ -1,16 +1,12 @@
-package com.Sparksupport.Product.product_sales_application.Controller;
+package com.sparksupport.product.product_sales_application.controller;
 
-import com.Sparksupport.Product.product_sales_application.Dto.Product;
-import com.Sparksupport.Product.product_sales_application.Dto.Sale;
-import com.Sparksupport.Product.product_sales_application.Service.Patch;
-import com.Sparksupport.Product.product_sales_application.Service.SaleService;
-import jakarta.validation.ConstraintViolationException;
+import com.sparksupport.product.product_sales_application.model.Sale;
+import com.sparksupport.product.product_sales_application.service.SaleService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

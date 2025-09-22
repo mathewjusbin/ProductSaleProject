@@ -1,12 +1,16 @@
-package com.Sparksupport.Product.product_sales_application.Util;
+package com.sparksupport.product.product_sales_application.util;
 
-import jakarta.validation.constraints.Min;
+import com.sparksupport.product.product_sales_application.dto.ProductDto;
+import com.sparksupport.product.product_sales_application.model.Product;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ProductServiceUtil {
 
@@ -26,5 +30,18 @@ public class ProductServiceUtil {
         return ResponseEntity.ok(response); //make it global later
     }
 
+    public static ProductDto convertToProductDto(Product product) {
+        return ProductDto.builder()
+                .description(Optional.ofNullable(product.getDescription()).orElse("No Description"))
+                .id(Optional.ofNullable(product.getId()).orElse(0))
+                .name(Optional.ofNullable(product.getName()).orElse("No Name"))
+                .price(Optional.ofNullable(product.getPrice()).orElse(0.0))
+                .build();
+    }
 
+    public static List<ProductDto> convertToProductDtoList( Page<Product> products) {
+        return products.stream()
+                .map(ProductServiceUtil::convertToProductDto)
+                .collect(Collectors.toList());
+    }
 }

@@ -1,19 +1,20 @@
-package com.Sparksupport.Product.product_sales_application.Service;
+package com.sparksupport.product.product_sales_application.service;
 
-import com.Sparksupport.Product.product_sales_application.Dto.Product;
+import com.sparksupport.product.product_sales_application.dto.ProductDto;
+import com.sparksupport.product.product_sales_application.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 
-public interface ProductService {
+public interface ProductService  {
 
     Page<Product> getAllProducts(Pageable pageable); // pagination
 
     Product getProductById(Integer id);
 
-    Product addProduct(Product product);
+    Product addProduct(ProductDto product);
 
-    Product updateProduct(Integer id, Product product);
+    public Product updateProduct(Integer id, Product product);
 
     void deleteProduct(Integer id);
 

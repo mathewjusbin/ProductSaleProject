@@ -1,4 +1,4 @@
-package com.Sparksupport.Product.product_sales_application.Dto;
+package com.sparksupport.product.product_sales_application.dto;
 import jakarta.validation.constraints.Min;
 
 public class ProductPaginationRequest {

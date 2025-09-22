@@ -1,6 +1,6 @@
-package com.Sparksupport.Product.product_sales_application.Service;
+package com.sparksupport.product.product_sales_application.service;
 
-import com.Sparksupport.Product.product_sales_application.Dto.Sale;
+import com.sparksupport.product.product_sales_application.model.Sale;
 
 public interface SaleService {
 

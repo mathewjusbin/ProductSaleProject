@@ -1,27 +1,27 @@
-package com.Sparksupport.Product.product_sales_application.Controller;
+package com.sparksupport.product.product_sales_application.controller;
 
 
 import com.Sparksupport.Product.product_sales_application.Dto.ProductResponse;
-import com.Sparksupport.Product.product_sales_application.Dto.Product;
-import com.Sparksupport.Product.product_sales_application.Dto.ProductPaginationRequest;
-import com.Sparksupport.Product.product_sales_application.Service.Create;
-import com.Sparksupport.Product.product_sales_application.Service.Patch;
-import com.Sparksupport.Product.product_sales_application.Service.ProductService;
+import com.sparksupport.product.product_sales_application.dto.ProductDto;
+import com.sparksupport.product.product_sales_application.dto.ProductPaginationRequest;
+import com.sparksupport.product.product_sales_application.model.Product;
+import com.sparksupport.product.product_sales_application.service.Create;
+import com.sparksupport.product.product_sales_application.service.Patch;
+import com.sparksupport.product.product_sales_application.service.ProductService;
+import com.sparksupport.product.product_sales_application.util.ProductServiceUtil;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 
-import static com.Sparksupport.Product.product_sales_application.Util.ProductServiceUtil.*;
+import static com.sparksupport.product.product_sales_application.util.ProductServiceUtil.*;
 
 
 @RestController
@@ -47,9 +47,8 @@ public class ProductController {
      */
     @GetMapping()
     public ResponseEntity<?> getAllProducts(@Valid @ModelAttribute ProductPaginationRequest paginationRequest) {
-        Pageable pageable = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getListSize());
-        Page<Product> result = productService.getAllProducts(pageable);
-        return ProductResponse.success(SUCCESS, result);
+        Pageable pageable = PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getListSize()); 
+        return ProductResponse.success(SUCCESS, ProductServiceUtil.convertToProductDtoList(productService.getAllProducts(pageable)));
     }
 
     /**
@@ -57,9 +56,8 @@ public class ProductController {
      * Returns single product by id.
      */
     @GetMapping("/{productId}")
-    public ResponseEntity<?> getProductById(@PathVariable @Min(value = 1, message = "productId must be >= 1") Integer productId) {
-        Product product = productService.getProductById(productId);
-        return ProductResponse.success(SUCCESS, product);
+    public ResponseEntity<?> getProductById(@PathVariable @Min(value = 1, message = "productId must be >= 1") Integer productId) { //TODO: Max
+        return ProductResponse.success(SUCCESS, ProductServiceUtil.convertToProductDto(productService.getProductById(productId)));
     }
 
     /**
@@ -69,9 +67,8 @@ public class ProductController {
      * Returns 201 Created with Location header.
      */
     @PostMapping
-    //@PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> addProduct(@Validated(Create.class) @RequestBody Product product) {
-        Product response = productService.addProduct(product);
+    public ResponseEntity<?> addProduct(@Validated(Create.class) @RequestBody ProductDto productDto) {
+        Product response = productService.addProduct(productDto);
         URI location = URI.create(String.format("/api/products/%d", response.getId()));
         return ProductResponse.success(CREATED, location);
     }
@@ -82,18 +79,19 @@ public class ProductController {
      * Requires ADMIN role.
      * Returns 204 No Content (or 200 with updated product if you prefer).
      */
-    //http://localhost:8080/api/products/123 and body
     @PatchMapping("/{id}")
-    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateProduct(@PathVariable
                                            @Min(value = 1, message = "productId must be >= 1")
                                            @Max(value = Integer.MAX_VALUE, message = "productId length exceeded") Integer id,
-                                           @Validated(Patch.class) @RequestBody Product product) {//I need to send body else will fial review
-
-        System.out.println(" patch product ");
-        Product response = productService.updateProduct(id, product);
-        return ProductResponse.success(UPDATED, response);
-
+                                           @Validated(Patch.class) @RequestBody ProductDto productDto) {//I need to send body else will fial review
+        Product product = Product.builder()
+                .Id(productDto.getId())
+                .name(productDto.getName())
+                .description(productDto.getDescription())
+                .isDeleted(Boolean.FALSE)
+                .price(productDto.getPrice())
+                .build();
+        return ProductResponse.success(UPDATED,ProductServiceUtil.convertToProductDto(productService.updateProduct(id, product)) );
     }
 
     /**
@@ -102,7 +100,6 @@ public class ProductController {
      * Requires ADMIN role.
      */
     @DeleteMapping("/{id}")
-    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteProduct(@PathVariable @Min(value = 1, message = "productId must be >= 1") Integer id) {
         productService.deleteProduct(id);
         return ProductResponse.success(DELETED, id);
@@ -117,7 +114,6 @@ public class ProductController {
         System.out.println(" total revenue ");
         Double total = productService.getTotalRevenue();
         return ResponseEntity.ok(total);
-
     }
 
     /**

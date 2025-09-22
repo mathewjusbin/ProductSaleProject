@@ -1,4 +1,4 @@
-package com.Sparksupport.Product.product_sales_application.Exception;
+package com.sparksupport.product.product_sales_application.exception;
 
 import com.Sparksupport.Product.product_sales_application.Dto.ProductResponse;
 import jakarta.validation.ConstraintViolation;
@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 @ControllerAdvice
