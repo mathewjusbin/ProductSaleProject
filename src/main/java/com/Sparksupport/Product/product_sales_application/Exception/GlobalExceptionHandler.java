@@ -1,6 +1,6 @@
 package com.sparksupport.product.product_sales_application.exception;
 
-import com.Sparksupport.Product.product_sales_application.Dto.ProductResponse;
+import com.sparksupport.product.product_sales_application.dto.ProductResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;

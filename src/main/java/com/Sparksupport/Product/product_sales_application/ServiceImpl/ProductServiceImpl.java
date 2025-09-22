@@ -110,7 +110,9 @@ public class ProductServiceImpl implements ProductService {
     public Double getRevenueByProduct(Integer productId) { //corner cases
         Product existingProduct = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
-        return existingProduct.getSaleList().stream().mapToDouble(
+        
+        // Get sales for this product using productId
+        return saleRepository.findByProductId(productId).stream().mapToDouble(
                 saleObj -> {
                     BigDecimal price = saleObj.getSalePrice() != null ? saleObj.getSalePrice() : BigDecimal.ZERO;
                     return price.multiply(BigDecimal.valueOf(saleObj.getQuantity())).doubleValue();

@@ -8,6 +8,7 @@ import com.sparksupport.product.product_sales_application.repository.SaleReposit
 import com.sparksupport.product.product_sales_application.service.SaleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SaleServiceImpl implements SaleService {
@@ -20,10 +21,28 @@ public class SaleServiceImpl implements SaleService {
         this.productRepository = productRepository;
         this.saleRepository = saleRepository;
     }
+
     @Override
-    public Sale addSales(Integer productId, Sale sale) { // check this one
+    @Transactional
+    public Sale addSales(Integer productId, Sale sale) {
         Product existingProduct = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
+
+        // Check if we have enough quantity in stock
+        if (existingProduct.getQuantity() < sale.getQuantity()) {
+            throw new RuntimeException("Insufficient stock. Available: " + existingProduct.getQuantity()
+                + ", Requested: " + sale.getQuantity());
+        }
+
+        // Reduce the quantity from product inventory
+        if (!existingProduct.reduceQuantity(sale.getQuantity())) {
+            throw new RuntimeException("Failed to reduce product quantity");
+        }
+
+        // Save the updated product with reduced quantity
+        productRepository.save(existingProduct);
+
+        sale.setProductId(productId);
         return saleRepository.save(sale);
     }
 

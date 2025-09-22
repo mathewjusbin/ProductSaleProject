@@ -1,4 +1,4 @@
-package com.Sparksupport.Product.product_sales_application.Dto;
+package com.sparksupport.product.product_sales_application.dto;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
