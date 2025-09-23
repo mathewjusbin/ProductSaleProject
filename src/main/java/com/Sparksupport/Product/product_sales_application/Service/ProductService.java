@@ -1,5 +1,6 @@
 package com.sparksupport.product.product_sales_application.service;
 
+import com.sparksupport.product.product_sales_application.dto.CreateProductDto;
 import com.sparksupport.product.product_sales_application.dto.ProductDto;
 import com.sparksupport.product.product_sales_application.model.Product;
 import org.springframework.data.domain.Page;
@@ -12,7 +13,7 @@ public interface ProductService  {
 
     Product getProductById(Integer id);
 
-    Product addProduct(ProductDto product);
+    Product addProduct(CreateProductDto createProductDto);
 
     public Product updateProduct(Integer id, Product product);
 

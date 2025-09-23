@@ -1,10 +1,13 @@
 package com.sparksupport.product.product_sales_application.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -13,6 +16,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Sale implements Serializable {
 
     @Serial
@@ -40,17 +45,10 @@ public class Sale implements Serializable {
     @Column(name = "sale_price", nullable = false, precision = 19, scale = 4)
     private BigDecimal salePrice;
 
-    public Sale(){ //why that error came mahn
-
-    }
-
-    public Sale(Integer id, Integer productId, Integer quantity, LocalDateTime saleDate, BigDecimal salePrice) {
-        Id = id;
-        this.productId = productId;
-        Quantity = quantity;
-        this.saleDate = saleDate;
-        this.salePrice = salePrice;
-    }
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    @JsonIgnore  // Hide internal implementation from API clients
+    private Boolean isDeleted = false;
 
     public BigDecimal getSalePrice() {
         return salePrice;
@@ -90,6 +88,14 @@ public class Sale implements Serializable {
 
     public void setSaleDate(LocalDateTime saleDate) {
         this.saleDate = saleDate;
+    }
+
+    public Boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted;
     }
 
     @Override

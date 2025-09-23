@@ -1,5 +1,6 @@
 package com.sparksupport.product.product_sales_application.util;
 
+import com.sparksupport.product.product_sales_application.dto.CreateProductDto;
 import com.sparksupport.product.product_sales_application.dto.ProductDto;
 import com.sparksupport.product.product_sales_application.model.Product;
 import org.springframework.data.domain.Page;
@@ -30,12 +31,23 @@ public class ProductServiceUtil {
         return ResponseEntity.ok(response); //make it global later
     }
 
+    public static Product convertToProduct(CreateProductDto createProductDto) {
+        return Product.builder()
+                .name(createProductDto.getName())
+                .description(createProductDto.getDescription())
+                .price(createProductDto.getPrice())
+                .quantity(createProductDto.getQuantity())
+                .isDeleted(false)
+                .build();
+    }
+
     public static ProductDto convertToProductDto(Product product) {
         return ProductDto.builder()
                 .description(Optional.ofNullable(product.getDescription()).orElse("No Description"))
                 .id(Optional.ofNullable(product.getId()).orElse(0))
                 .name(Optional.ofNullable(product.getName()).orElse("No Name"))
                 .price(Optional.ofNullable(product.getPrice()).orElse(0.0))
+                .quantity(Optional.ofNullable(product.getQuantity()).orElse(0))
                 .build();
     }
 
