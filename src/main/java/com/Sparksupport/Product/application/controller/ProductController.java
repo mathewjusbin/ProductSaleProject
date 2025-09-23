@@ -135,14 +135,7 @@ public class ProductController {
                                            @Min(value = 1, message = "productId must be >= 1")
                                            @Max(value = Integer.MAX_VALUE, message = "productId length exceeded") Integer id,
                                            @Validated(Patch.class) @RequestBody UpdateProductDto updateProductDto) {
-        Product product = Product.builder()
-                .name(updateProductDto.getName())
-                .description(updateProductDto.getDescription())
-                .price(updateProductDto.getPrice())
-                .quantity(updateProductDto.getQuantity())
-                .isDeleted(Boolean.FALSE)
-                .build();
-        return ProductResponse.success(UPDATED,ProductServiceUtil.convertToProductDto(productService.updateProduct(id, product)) );
+        return ProductResponse.success(UPDATED, ProductServiceUtil.convertToProductDto(productService.updateProduct(id, updateProductDto)));
     }
 
     /**

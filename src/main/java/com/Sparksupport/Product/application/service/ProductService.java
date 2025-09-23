@@ -1,6 +1,7 @@
 package com.sparksupport.product.application.service;
 
 import com.sparksupport.product.application.dto.CreateProductDto;
+import com.sparksupport.product.application.dto.UpdateProductDto;
 import com.sparksupport.product.application.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,7 +15,7 @@ public interface ProductService  {
 
     Product addProduct(CreateProductDto createProductDto);
 
-    public Product updateProduct(Integer id, Product product);
+    Product updateProduct(Integer id, UpdateProductDto updateProductDto);
 
     void deleteProduct(Integer id);
 

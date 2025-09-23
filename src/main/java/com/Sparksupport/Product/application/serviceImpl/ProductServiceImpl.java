@@ -1,6 +1,7 @@
 package com.sparksupport.product.application.serviceImpl;
 
 import com.sparksupport.product.application.dto.CreateProductDto;
+import com.sparksupport.product.application.dto.UpdateProductDto;
 import com.sparksupport.product.application.exception.ProductNotFoundException;
 import com.sparksupport.product.application.model.Product;
 import com.sparksupport.product.application.repository.ProductRepository;
@@ -54,29 +55,28 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product updateProduct(Integer id, Product product) {
+    public Product updateProduct(Integer id, UpdateProductDto updateProductDto) {
         //first find by Id
-        //convert to product dtp pass here
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
 
         //Next validation for find by name - optimized to single DB call
-        if (product.getName() != null && !product.getName().isBlank()) {
+        if (updateProductDto.getName() != null && !updateProductDto.getName().isBlank()) {
             // Check if the name already exists for other products (excluding current product)
             // This replaces the previous two-step check with a single optimized query
-            if (productRepository.existsByNameAndIsDeletedFalseAndIdNot(product.getName().trim(), id)) {
-                throw new IllegalArgumentException("Product with name '" + product.getName() + "' already exists.");
+            if (productRepository.existsByNameAndIsDeletedFalseAndIdNot(updateProductDto.getName().trim(), id)) {
+                throw new IllegalArgumentException("Product with name '" + updateProductDto.getName() + "' already exists.");
             }
-            existingProduct.setName(product.getName().trim());
+            existingProduct.setName(updateProductDto.getName().trim());
         }
-        if (product.getPrice() != null) {
-            existingProduct.setPrice(product.getPrice());
+        if (updateProductDto.getPrice() != null) {
+            existingProduct.setPrice(updateProductDto.getPrice());
         }
-        if (product.getDescription() != null && !product.getDescription().isBlank()) {
-            existingProduct.setDescription(product.getDescription().trim());
+        if (updateProductDto.getDescription() != null && !updateProductDto.getDescription().isBlank()) {
+            existingProduct.setDescription(updateProductDto.getDescription().trim());
         }
-        if (product.getQuantity() != null) {
-            existingProduct.setQuantity(product.getQuantity());
+        if (updateProductDto.getQuantity() != null) {
+            existingProduct.setQuantity(updateProductDto.getQuantity());
         }
 
         return productRepository.save(existingProduct);
