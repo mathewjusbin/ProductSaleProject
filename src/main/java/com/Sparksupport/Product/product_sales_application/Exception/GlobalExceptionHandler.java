@@ -65,6 +65,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(IpAccessDeniedException.class)
+    public ResponseEntity<Object> handleIpAccessDenied(IpAccessDeniedException ex) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("status", HttpStatus.FORBIDDEN.value());
+        errorResponse.put("error", "IP Access Denied");
+        errorResponse.put("message", ex.getMessage());
+        errorResponse.put("clientIp", ex.getClientIp());
+        errorResponse.put("requestUri", ex.getRequestUri());
+        errorResponse.put("timestamp", java.time.Instant.now().toString());
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(InsufficientStockException.class)
     public ResponseEntity<Object> handleInsufficientStock(InsufficientStockException ex) {
         Map<String, Object> errorResponse = new HashMap<>();
