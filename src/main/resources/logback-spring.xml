@@ -19,9 +19,26 @@
         </rollingPolicy>
     </appender>
 
+    <!-- Debug file appender -->
+    <appender name="DEBUG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>productlog.log</file>
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>productlog.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
     <!-- Audit logger - writes only to audit file -->
     <logger name="audit" level="INFO" additivity="false">
         <appender-ref ref="AUDIT_FILE"/>
+    </logger>
+
+    <!-- Debug logger - writes only to debug file -->
+    <logger name="debug" level="DEBUG" additivity="false">
+        <appender-ref ref="DEBUG_FILE"/>
     </logger>
 
     <!-- Root logger -->
