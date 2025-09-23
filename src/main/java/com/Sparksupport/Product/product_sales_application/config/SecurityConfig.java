@@ -54,6 +54,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/sales/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/reports/**").permitAll()
                 // Health check endpoints (bypass IP filtering)
                 .requestMatchers("/api/products/healthcheck", "/actuator/health", "/health").permitAll()
                 // Swagger UI endpoints
@@ -68,6 +69,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/sales/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/api/sales/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/sales/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/reports/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/reports/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/reports/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/reports/**").hasRole("ADMIN")
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )

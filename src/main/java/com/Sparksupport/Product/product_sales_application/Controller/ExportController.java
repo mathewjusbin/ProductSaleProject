@@ -1,4 +1,4 @@
-package com.sparksupport.product.product_sales_application.pdf.controller;
+package com.sparksupport.product.product_sales_application.controller;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 
 
 import com.sparksupport.product.product_sales_application.service.ProductService;
-import com.sparksupport.product.product_sales_application.pdf.service.ProductPdfService;
+import com.sparksupport.product.product_sales_application.serviceImpl.ProductPdfService;
 import com.sparksupport.product.product_sales_application.model.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 
