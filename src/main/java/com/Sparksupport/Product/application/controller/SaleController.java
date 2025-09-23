@@ -41,7 +41,7 @@ public class SaleController {
      */
     @PostMapping("/{productId}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Add a new sale", description = "Create a new sale for a product (Admin only)")
+    @Operation(summary = "Add a new sale", description = "Create a new sale for a product")
     @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<?> addSale(
             @PathVariable @Min(value = 1, message = "productId must be >= 1") Integer productId,
@@ -106,12 +106,6 @@ public class SaleController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a sale", description = "Delete a sale by ID (Admin only)")
     @SecurityRequirement(name = "Bearer Authentication")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Sale deleted successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Admin role required"),
-            @ApiResponse(responseCode = "404", description = "Sale not found")
-    })
     public ResponseEntity<?> deleteSale(
             @PathVariable @Min(value = 1, message = "saleId must be >= 1") Integer saleId) {
 
@@ -128,12 +122,6 @@ public class SaleController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get sales by product ID", description = "Returns paginated list of sales for a specific product (Admin only)")
     @SecurityRequirement(name = "Bearer Authentication")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Sales retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Admin role required"),
-            @ApiResponse(responseCode = "404", description = "Product not found")
-    })
     public ResponseEntity<?> getSalesByProductId(
             @PathVariable @Min(value = 1, message = "productId must be >= 1") Integer productId,
             @Valid @ModelAttribute PaginationRequest paginationRequest) {
@@ -152,11 +140,6 @@ public class SaleController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all sales", description = "Returns paginated list of all sales (Admin only)")
     @SecurityRequirement(name = "Bearer Authentication")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Sales retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Admin role required")
-    })
     public ResponseEntity<?> getAllSales(@Valid @ModelAttribute PaginationRequest paginationRequest) {
 
         Page<Sale> salesPage = saleService.getAllSales(

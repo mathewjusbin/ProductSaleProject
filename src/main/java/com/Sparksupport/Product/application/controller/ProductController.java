@@ -84,6 +84,10 @@ public class ProductController {
      * @throws com.sparksupport.product.application.exception.ProductNotFoundException if product with given ID doesn't exist
      */
     @GetMapping("/{productId}")
+    @Operation(
+            summary = "Get product by ID",
+            description = "Retrieve detailed information about a specific product by its unique identifier"
+    )
     public ResponseEntity<?> getProductById(@PathVariable @Min(value = 1, message = "productId must be >= 1") Integer productId) { //TODO: Max
         return ProductResponse.success(SUCCESS, ProductServiceUtil.convertToProductDto(productService.getProductById(productId)));
     }
@@ -152,6 +156,10 @@ public class ProductController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(
+            summary = "Delete a product",
+            description = "Soft delete a product by marking it as deleted. Requires ADMIN role authentication."
+    )
     public ResponseEntity<?> deleteProduct(@PathVariable @Min(value = 1, message = "productId must be >= 1") Integer id) {
         productService.deleteProduct(id);
         return ProductResponse.success(DELETED, id);
