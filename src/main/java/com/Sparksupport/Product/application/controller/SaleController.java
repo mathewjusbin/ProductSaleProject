@@ -21,6 +21,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import static com.sparksupport.product.application.util.ProductServiceUtil.DELETED;
+import static com.sparksupport.product.application.util.ProductServiceUtil.SUCCESS;
 
 @RestController
 @RequestMapping("/api/sales")
@@ -42,13 +43,6 @@ public class SaleController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Add a new sale", description = "Create a new sale for a product (Admin only)")
     @SecurityRequirement(name = "Bearer Authentication")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Sale created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Admin role required"),
-            @ApiResponse(responseCode = "404", description = "Product not found")
-    })
     public ResponseEntity<?> addSale(
             @PathVariable @Min(value = 1, message = "productId must be >= 1") Integer productId,
             @RequestBody @Validated(Create.class) CreateSaleDto saleRequest) {
@@ -70,7 +64,7 @@ public class SaleController {
         responseDto.setSaleDate(savedSale.getSaleDate());
         responseDto.setSalePrice(savedSale.getSalePrice());
 
-        return ResponseEntity.ok(responseDto);
+        return ProductResponse.created(DELETED, responseDto);
     }
 
     /**
@@ -87,13 +81,6 @@ public class SaleController {
                     "Use this to correct mistakes in quantity or sale date (Admin only)."
     )
     @SecurityRequirement(name = "Bearer Authentication")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Sale updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data or validation errors"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Admin role required"),
-            @ApiResponse(responseCode = "404", description = "Sale not found")
-    })
     public ResponseEntity<?> updateSale(
             @PathVariable @Min(value = 1, message = "saleId must be >= 1") Integer saleId,
             @Validated(Patch.class) @RequestBody UpdateSaleDto updateSaleRequest) {
@@ -109,7 +96,7 @@ public class SaleController {
         responseDto.setSaleDate(updatedSale.getSaleDate());
         // Intentionally not setting salePrice - it's internal and shouldn't be exposed to client
 
-        return ResponseEntity.ok(responseDto);
+        return ProductResponse.success(SUCCESS, responseDto);
     }
 
     /**
@@ -154,7 +141,7 @@ public class SaleController {
         Page<Sale> salesPage = saleService.getSalesByProductId(productId,
                 PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getListSize()));
 
-        return ResponseEntity.ok(salesPage);
+        return ProductResponse.success(SUCCESS, salesPage);
     }
 
     /**
@@ -175,6 +162,8 @@ public class SaleController {
         Page<Sale> salesPage = saleService.getAllSales(
                 PageRequest.of(paginationRequest.getPageNumber(), paginationRequest.getListSize()));
 
-        return ResponseEntity.ok(salesPage);
+        return ProductResponse.success(SUCCESS, salesPage);
+
     }
 }
+
