@@ -2,11 +2,16 @@ package com.sparksupport.product.product_sales_application.serviceImpl;
 
 import com.sparksupport.product.product_sales_application.model.Product;
 import com.sparksupport.product.product_sales_application.model.Sale;
+import com.sparksupport.product.product_sales_application.config.PdfTaskManager;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
@@ -17,8 +22,15 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-public class ProductPdfService {
+@Service
+public class ProductPdfService implements com.sparksupport.product.product_sales_application.service.ProductPdfService {
 
     private static final float MARGIN = 50;
     private static final float ROW_HEIGHT = 25;
@@ -26,7 +38,87 @@ public class ProductPdfService {
     private static final DecimalFormat CURRENCY_FORMAT = new DecimalFormat("#,##0.00");
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 
-    public byte[] generateProductTablePdf(List<Product> products) throws IOException {
+    // Async processing components
+    private final ExecutorService executorService = Executors.newFixedThreadPool(5);
+    private final Path exportDir = Paths.get("./exports");
+    private final PdfTaskManager taskManager;
+    private final com.sparksupport.product.product_sales_application.service.ProductService productService;
+    private final com.sparksupport.product.product_sales_application.repository.SaleRepository saleRepository;
+
+    @Autowired
+    public ProductPdfService(PdfTaskManager taskManager,
+                           com.sparksupport.product.product_sales_application.service.ProductService productService,
+                           com.sparksupport.product.product_sales_application.repository.SaleRepository saleRepository) throws IOException {
+        this.taskManager = taskManager;
+        this.productService = productService;
+        this.saleRepository = saleRepository;
+        // Ensure export directory exists
+        if (!Files.exists(exportDir)) {
+            Files.createDirectories(exportDir);
+        }
+    }
+
+    @Override
+    public String submitPdfGenerationJob(List<Product> products) {
+        String jobId = UUID.randomUUID().toString();
+        taskManager.setJobStatus(jobId, "IN_PROGRESS");
+
+        executorService.submit(() -> {
+            try {
+                byte[] pdfBytes = generateProductTablePdf(products);
+                String fileName = "products-report-" + jobId + ".pdf";
+                Path filePath = exportDir.resolve(fileName);
+                Files.write(filePath, pdfBytes);
+                taskManager.setJobStatus(jobId, "COMPLETED");
+                System.out.println("PDF generation completed successfully for jobId: " + jobId);
+            } catch (Exception e) {
+                taskManager.setJobStatus(jobId, "FAILED");
+                System.err.println("PDF generation failed for jobId: " + jobId + ". Error: " + e.getMessage());
+                e.printStackTrace();
+
+                // Log the detailed error
+                try {
+                    System.err.println("Detailed error information:");
+                    System.err.println("Exception type: " + e.getClass().getSimpleName());
+                    System.err.println("Message: " + e.getMessage());
+                    if (e.getCause() != null) {
+                        System.err.println("Cause: " + e.getCause().getMessage());
+                    }
+                } catch (Exception logEx) {
+                    System.err.println("Error while logging exception details: " + logEx.getMessage());
+                }
+            }
+        });
+
+        return jobId;
+    }
+
+    @Override
+    public String checkJobStatus(String jobId) {
+        return taskManager.getJobStatus(jobId);
+    }
+
+    @Override
+    public byte[] getFileIfReady(String jobId) throws Exception {
+        String status = checkJobStatus(jobId);
+
+        if (!"COMPLETED".equals(status)) {
+            // Return null if file is not ready - controller will handle status response
+            return null;
+        }
+
+        String fileName = "products-report-" + jobId + ".pdf";
+        Path filePath = exportDir.resolve(fileName);
+
+        if (!Files.exists(filePath)) {
+            throw new Exception("File not found for completed job: " + jobId);
+        }
+
+        return Files.readAllBytes(filePath);
+    }
+
+    @Override
+    public byte[] generateProductTablePdf(List<Product> products) throws Exception {
         try (PDDocument document = new PDDocument();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
@@ -286,4 +378,222 @@ public class ProductPdfService {
     private String formatCurrency(Number amount) {
         return "Rs. " + CURRENCY_FORMAT.format(amount);
     }
+
+    @Override
+    public String submitPdfGenerationJob() {
+        String jobId = UUID.randomUUID().toString();
+        taskManager.setJobStatus(jobId, "IN_PROGRESS");
+
+        // Submit the PDF generation job without pre-loading all data
+        executorService.submit(() -> {
+            try {
+                byte[] pdfBytes = generateProductTablePdfWithBatching();
+                String fileName = "products-report-" + jobId + ".pdf";
+                Path filePath = exportDir.resolve(fileName);
+                Files.write(filePath, pdfBytes);
+                taskManager.setJobStatus(jobId, "COMPLETED");
+                System.out.println("PDF generation completed successfully for jobId: " + jobId);
+            } catch (Exception e) {
+                taskManager.setJobStatus(jobId, "FAILED");
+                System.err.println("PDF generation failed for jobId: " + jobId + ". Error: " + e.getMessage());
+                e.printStackTrace();
+
+                // Log the detailed error
+                try {
+                    System.err.println("Detailed error information:");
+                    System.err.println("Exception type: " + e.getClass().getSimpleName());
+                    System.err.println("Message: " + e.getMessage());
+                    if (e.getCause() != null) {
+                        System.err.println("Cause: " + e.getCause().getMessage());
+                    }
+                } catch (Exception logEx) {
+                    System.err.println("Error while logging exception details: " + logEx.getMessage());
+                }
+            }
+        });
+
+        return jobId;
+    }
+
+    // New method for batch processing
+    @Transactional(readOnly = true)
+    public byte[] generateProductTablePdfWithBatching() throws Exception {
+        try (PDDocument document = new PDDocument();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+
+            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+                drawProductTableWithBatching(contentStream, page);
+            }
+
+            document.save(out);
+            return out.toByteArray();
+        }
+    }
+
+    private void drawProductTableWithBatching(PDPageContentStream contentStream, PDPage page) throws IOException {
+        float pageWidth = page.getMediaBox().getWidth();
+        float pageHeight = page.getMediaBox().getHeight();
+
+        String[] headers = {"ID", "Product Name", "Description", "Price", "Qty", "Revenue"};
+        float[] columnWidths = {30, 140, 180, 65, 40, 80};
+
+        float currentY = pageHeight - 100;
+
+        // Draw title and header
+        drawTitle(contentStream, "Product Inventory Report", pageWidth, currentY);
+        currentY -= 50;
+        currentY = drawTableHeader(contentStream, headers, columnWidths, currentY);
+
+        // Process products in batches
+        int batchSize = 50; // Process 50 products at a time
+        int pageNumber = 0;
+        boolean hasMoreProducts = true;
+
+        while (hasMoreProducts && currentY > 100) {
+            // Fetch batch of products
+            List<Product> productBatch = fetchProductBatch(pageNumber, batchSize);
+
+            if (productBatch.isEmpty()) {
+                hasMoreProducts = false;
+                break;
+            }
+
+            // Process each product in the batch
+            for (Product product : productBatch) {
+                if (product.getIsDeleted() != null && product.getIsDeleted()) {
+                    continue;
+                }
+
+                // Calculate revenue for this product (with sales batching)
+                BigDecimal actualRevenue = calculateRevenueWithBatching(product.getId());
+
+                // Draw product row
+                currentY = drawSingleProductRow(contentStream, product, actualRevenue, columnWidths, currentY);
+
+                // Check if we need a new page
+                if (currentY < 100) {
+                    break;
+                }
+            }
+
+            pageNumber++;
+        }
+
+        // Draw footer
+        int totalProducts = getTotalProductCount();
+        drawFooter(contentStream, totalProducts, pageWidth);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Product> fetchProductBatch(int pageNumber, int batchSize) {
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(pageNumber, batchSize);
+        return productService.getAllProducts(pageable).getContent();
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal calculateRevenueWithBatching(Integer productId) {
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+        int saleBatchSize = 100; // Process 100 sales at a time
+        int salePageNumber = 0;
+        boolean hasMoreSales = true;
+
+        while (hasMoreSales) {
+            // Fetch sales in batches using a custom repository method
+            List<Sale> salesBatch = fetchSalesBatchForProduct(productId, salePageNumber, saleBatchSize);
+
+            if (salesBatch.isEmpty()) {
+                hasMoreSales = false;
+                break;
+            }
+
+            // Calculate revenue for this batch
+            for (Sale sale : salesBatch) {
+                if (sale.getIsDeleted() != null && sale.getIsDeleted()) {
+                    continue;
+                }
+                BigDecimal saleRevenue = sale.getSalePrice().multiply(BigDecimal.valueOf(sale.getQuantity()));
+                totalRevenue = totalRevenue.add(saleRevenue);
+            }
+
+            salePageNumber++;
+        }
+
+        return totalRevenue;
+    }
+
+    private List<Sale> fetchSalesBatchForProduct(Integer productId, int pageNumber, int batchSize) {
+        try {
+            Pageable pageable = org.springframework.data.domain.PageRequest.of(pageNumber, batchSize);
+            return saleRepository.findByProductIdAndIsDeletedFalse(productId, pageable).getContent();
+        } catch (Exception e) {
+            System.err.println("Error fetching sales batch for product " + productId + ": " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    private int getTotalProductCount() {
+        // Get total count without loading all products
+        return (int) productService.getAllProducts(org.springframework.data.domain.Pageable.unpaged()).getTotalElements();
+    }
+
+    private float drawSingleProductRow(PDPageContentStream contentStream, Product product,
+                                     BigDecimal actualRevenue, float[] columnWidths, float currentY) throws IOException {
+        contentStream.setFont(PDType1Font.HELVETICA, 9);
+        float currentX = MARGIN;
+
+        String[] rowData = {
+            String.valueOf(product.getId()),
+            truncateText(product.getName(), 30),
+            product.getDescription() != null ? product.getDescription() : "",
+            formatCurrency(product.getPrice()),
+            String.valueOf(product.getQuantity()),
+            formatCurrency(actualRevenue)
+        };
+
+        String description = rowData[2];
+        List<String> wrappedLines = wrapText(description, columnWidths[2] - 6, PDType1Font.HELVETICA, 9);
+        float rowHeightNeeded = Math.max(ROW_HEIGHT, wrappedLines.size() * 12);
+
+        // Draw cells
+        for (int i = 0; i < rowData.length; i++) {
+            drawCellBorder(contentStream, currentX, currentY - rowHeightNeeded, columnWidths[i], rowHeightNeeded);
+
+            if (i == 2) { // Description column - wrap text
+                float lineY = currentY - 10;
+                for (String line : wrappedLines) {
+                    contentStream.beginText();
+                    contentStream.newLineAtOffset(currentX + 3, lineY);
+                    contentStream.showText(line);
+                    contentStream.endText();
+                    lineY -= 12;
+                }
+            } else {
+                float textX;
+                if (i == 3 || i == 4 || i == 5) {
+                    float textWidth = PDType1Font.HELVETICA.getStringWidth(rowData[i]) / 1000 * 9;
+                    textX = currentX + (columnWidths[i] - textWidth) / 2;
+                } else {
+                    textX = currentX + 5;
+                }
+
+                float textY = currentY - rowHeightNeeded/2 - 2;
+
+                contentStream.beginText();
+                contentStream.newLineAtOffset(textX, textY);
+                contentStream.showText(rowData[i]);
+                contentStream.endText();
+            }
+
+            currentX += columnWidths[i];
+        }
+
+        return currentY - rowHeightNeeded;
+    }
+
+    // Remove the old method that fetches all data at once
+    // @Transactional(readOnly = true)
+    // public List<Product> fetchProductsWithSalesDataInTransaction() { ... }
 }
